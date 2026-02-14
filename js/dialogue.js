@@ -190,6 +190,33 @@ class ChoiceBox {
         }
     }
 
+    handleTouch(touchX, touchY) {
+        if (!this.active) return false;
+
+        const boxWidth = 450;
+        const buttonHeight = 55;
+        const buttonSpacing = 16;
+        const boxHeight = this.choices.length * (buttonHeight + buttonSpacing) + 50;
+        const boxX = (this.width - boxWidth) / 2;
+        const boxY = (this.height - boxHeight) / 2;
+
+        // Check each choice button
+        this.choices.forEach((choice, index) => {
+            const btnY = boxY + 30 + (index * (buttonHeight + buttonSpacing));
+            const btnX = boxX + 25;
+            const btnWidth = boxWidth - 50;
+
+            // Check if touch is within button bounds
+            if (touchX >= btnX && touchX <= btnX + btnWidth &&
+                touchY >= btnY && touchY <= btnY + buttonHeight) {
+                this.selectedIndex = index;
+                this.select();
+            }
+        });
+
+        return true; // Touch was handled
+    }
+
     draw() {
         if (!this.active) return;
 

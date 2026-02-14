@@ -311,6 +311,15 @@ class Arc2_Staircase extends Scene {
 
         // Handle choice
         if (this.choice.isActive()) {
+            // Touch/click support
+            if (input.touchAction === 'tap') {
+                const pos = input.getTouchPosition();
+                if (this.choice.handleTouch(pos.x, pos.y)) {
+                    input.clearTouchAction();
+                    return;
+                }
+            }
+
             if (input.isKeyPressed('ArrowUp')) {
                 this.choice.moveSelection(-1);
                 // this.game.assets.playSound('sfx_select', 0.2);
