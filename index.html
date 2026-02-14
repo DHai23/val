@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valentine Pixel Story</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game" width="1280" height="720"></canvas>
+        <div id="loading">
+            <p>Loading...</p>
+        </div>
+    </div>
+
+    <!-- Core Engine -->
+    <script src="js/input.js"></script>
+    <script src="js/assets.js"></script>
+    <script src="js/dialogue.js"></script>
+    <script src="js/sprite.js"></script>
+    <script src="js/scene.js"></script>
+
+    <!-- Scenes -->
+    <script src="js/scenes/TitleScene.js"></script>
+    <script src="js/scenes/Arc1_School.js"></script>
+    <script src="js/scenes/Arc2_Staircase.js"></script>
+    <script src="js/scenes/Arc3_Park.js"></script>
+    <script src="js/scenes/Arc4_Laptop.js"></script>
+
+    <!-- Main Entry Point -->
+    <script src="js/main.js"></script>
+</body>
+</html>
