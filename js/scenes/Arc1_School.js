@@ -19,6 +19,10 @@ class Arc1_School extends Scene {
         // Initialize player sprite
         this.playerSprite = null;
 
+        // Mobile touch controls
+        this.touchLeft = false;
+        this.touchRight = false;
+
         // Initialize cherry blossom particles
         for (let i = 0; i < 50; i++) {
             this.cherryBlossoms.push({
@@ -46,10 +50,101 @@ class Arc1_School extends Scene {
         } else {
             console.warn('Arc1 - Player image not found in assets');
         }
+
+        // Set up mobile button touch handlers
+        this.setupMobileButtonHandlers();
+    }
+
+    setupMobileButtonHandlers() {
+        const canvas = this.game.canvas;
+
+        const handleTouchStart = (e) => {
+            if (this.dialogue.isActive() || this.choice.isActive()) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            const touch = e.touches ? e.touches[0] : e;
+            const touchX = (touch.clientX - rect.left) * scaleX;
+            const touchY = (touch.clientY - rect.top) * scaleY;
+
+            const buttons = this.getMobileButtonBounds();
+
+            console.log('Touch at:', touchX, touchY);
+            console.log('Left button bounds:', buttons.left);
+            console.log('Right button bounds:', buttons.right);
+
+            // Check left button
+            if (touchX >= buttons.left.x && touchX <= buttons.left.x + buttons.left.width &&
+                touchY >= buttons.left.y && touchY <= buttons.left.y + buttons.left.height) {
+                console.log('LEFT BUTTON PRESSED!');
+                this.touchLeft = true;
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            // Check right button
+            if (touchX >= buttons.right.x && touchX <= buttons.right.x + buttons.right.width &&
+                touchY >= buttons.right.y && touchY <= buttons.right.y + buttons.right.height) {
+                console.log('RIGHT BUTTON PRESSED!');
+                this.touchRight = true;
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        };
+
+        const handleTouchEnd = (e) => {
+            this.touchLeft = false;
+            this.touchRight = false;
+        };
+
+        // Store handlers for cleanup
+        this.mobileButtonHandlers = {
+            touchStart: handleTouchStart,
+            touchEnd: handleTouchEnd
+        };
+
+        canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+        canvas.addEventListener('touchend', handleTouchEnd);
+        canvas.addEventListener('touchcancel', handleTouchEnd);
+        canvas.addEventListener('mousedown', handleTouchStart);
+        canvas.addEventListener('mouseup', handleTouchEnd);
     }
 
     exit() {
         super.exit();
+
+        // Clean up mobile button handlers
+        if (this.mobileButtonHandlers) {
+            const canvas = this.game.canvas;
+            canvas.removeEventListener('touchstart', this.mobileButtonHandlers.touchStart);
+            canvas.removeEventListener('touchend', this.mobileButtonHandlers.touchEnd);
+            canvas.removeEventListener('touchcancel', this.mobileButtonHandlers.touchEnd);
+            canvas.removeEventListener('mousedown', this.mobileButtonHandlers.touchStart);
+            canvas.removeEventListener('mouseup', this.mobileButtonHandlers.touchEnd);
+        }
+    }
+
+    getMobileButtonBounds() {
+        const buttonSize = 100;
+        const buttonMargin = 40;
+        const buttonY = this.height - buttonSize - buttonMargin - 100; // Move higher up
+
+        return {
+            left: {
+                x: buttonMargin,
+                y: buttonY,
+                width: buttonSize,
+                height: buttonSize
+            },
+            right: {
+                x: buttonMargin + buttonSize + 30,
+                y: buttonY,
+                width: buttonSize,
+                height: buttonSize
+            }
+        };
     }
 
     update(deltaTime) {
@@ -122,8 +217,12 @@ class Arc1_School extends Scene {
         }
 
         // Movement
-        const movingRight = input.isKeyDown('ArrowRight');
-        const movingLeft = input.isKeyDown('ArrowLeft');
+        const movingRight = input.isKeyDown('ArrowRight') || this.touchRight;
+        const movingLeft = input.isKeyDown('ArrowLeft') || this.touchLeft;
+
+        if (this.touchLeft || this.touchRight) {
+            console.log('Touch flags - Left:', this.touchLeft, 'Right:', this.touchRight);
+        }
 
         if (movingLeft) {
             this.walking = true;
@@ -330,5 +429,65 @@ class Arc1_School extends Scene {
             this.ctx.shadowBlur = 0;
             this.ctx.textAlign = 'left';
         }
+
+        // Draw mobile control buttons
+        this.drawMobileButtons();
+    }
+
+    drawMobileButtons() {
+        // Don't show buttons when dialogue or choices are active
+        if (this.dialogue.isActive() || this.choice.isActive()) {
+            return;
+        }
+
+        const buttons = this.getMobileButtonBounds();
+
+        // Left button - with rounded corners
+        this.ctx.fillStyle = this.touchLeft ? 'rgba(231, 76, 60, 0.9)' : 'rgba(52, 152, 219, 0.7)';
+        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+        this.ctx.lineWidth = 4;
+
+        // Draw rounded rectangle for left button
+        this.roundRect(buttons.left.x, buttons.left.y, buttons.left.width, buttons.left.height, 15);
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        // Left arrow - larger and centered
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.beginPath();
+        this.ctx.moveTo(buttons.left.x + 65, buttons.left.y + 25);
+        this.ctx.lineTo(buttons.left.x + 35, buttons.left.y + 50);
+        this.ctx.lineTo(buttons.left.x + 65, buttons.left.y + 75);
+        this.ctx.closePath();
+        this.ctx.fill();
+
+        // Right button - with rounded corners
+        this.ctx.fillStyle = this.touchRight ? 'rgba(231, 76, 60, 0.9)' : 'rgba(52, 152, 219, 0.7)';
+        this.roundRect(buttons.right.x, buttons.right.y, buttons.right.width, buttons.right.height, 15);
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        // Right arrow - larger and centered
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.beginPath();
+        this.ctx.moveTo(buttons.right.x + 35, buttons.right.y + 25);
+        this.ctx.lineTo(buttons.right.x + 65, buttons.right.y + 50);
+        this.ctx.lineTo(buttons.right.x + 35, buttons.right.y + 75);
+        this.ctx.closePath();
+        this.ctx.fill();
+    }
+
+    roundRect(x, y, width, height, radius) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(x + radius, y);
+        this.ctx.lineTo(x + width - radius, y);
+        this.ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        this.ctx.lineTo(x + width, y + height - radius);
+        this.ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        this.ctx.lineTo(x + radius, y + height);
+        this.ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        this.ctx.lineTo(x, y + radius);
+        this.ctx.quadraticCurveTo(x, y, x + radius, y);
+        this.ctx.closePath();
     }
 }
